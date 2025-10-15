@@ -90,7 +90,7 @@ final class ConcertController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/concert/{id}/delete', name: 'app_admin_concert_delete', methods: ['GET', 'POST'])]
+    #[Route('/admin/concert/{id}/delete', name: 'app_admin_concert_delete', methods: ['GET', 'DELETE'])]
     public function delete(int $id, Request $request): Response
     {
         $concert = $this->entityManager->getRepository(Concert::class)->find($id);

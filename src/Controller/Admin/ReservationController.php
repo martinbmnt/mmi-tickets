@@ -90,7 +90,7 @@ final class ReservationController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/reservation/{id}/delete', name: 'app_admin_reservation_delete', methods: ['GET', 'POST'])]
+    #[Route('/admin/reservation/{id}/delete', name: 'app_admin_reservation_delete', methods: ['GET', 'DELETE'])]
     public function delete(int $id, Request $request): Response
     {
         $reservation = $this->entityManager->getRepository(Reservation::class)->find($id);

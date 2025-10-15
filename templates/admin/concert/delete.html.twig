@@ -6,6 +6,7 @@
 <main class="wrapper">
     <h1>Supprimer le concert {{ concert.musicGroup }}</h1>
     <form method="post" action="{{ path('app_admin_concert_delete', {'id': concert.id}) }}">
+      <input type="hidden" name="_method" value="DELETE">
       <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ concert.id) }}">
       <p>Voulez-vous vraiment supprimer le concert {{ concert.musicGroup }} ?</p>
       <button type="submit">Supprimer</button>

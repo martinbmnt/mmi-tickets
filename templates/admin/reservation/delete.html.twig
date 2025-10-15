@@ -6,6 +6,7 @@
 <main class="wrapper">
     <h1>Supprimer la reservation {{ reservation.reference }}</h1>
     <form method="post" action="{{ path('app_admin_reservation_delete', {'id': reservation.id}) }}">
+      <input type="hidden" name="_method" value="DELETE">
       <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reservation.id) }}">
       <p>Voulez-vous vraiment supprimer la reservation {{ reservation.reference }} ?</p>
       <button type="submit">Supprimer</button>
