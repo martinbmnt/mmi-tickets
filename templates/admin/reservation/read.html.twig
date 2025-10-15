@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservation {{ reservation.reference }}{% endblock %}
+
+{% block body %}
+<main class="wrapper">
+    <h1>Réservation {{ reservation.reference }}</h1>
+    <table>
+        <tr>
+            <th>Référence</th>
+            <td>{{ reservation.reference }}</td>
+        </tr>
+        <tr>
+            <th>Groupe</th>
+            <td><a href="{{ path('app_admin_concert_read', { id: reservation.concert.id }) }}">{{ reservation.concert.musicGroup }}</a></td>
+        </tr>
+        <tr>
+            <th>Pseudo</th>
+            <td>{{ reservation.pseudo }}</td>
+        </tr>
+        <tr>
+            <th>Statut</th>
+            <td>{{ reservation.status.name }}</td>
+        </tr>
+        <tr>
+            <th>Réservé le</th>
+            <td>{{ reservation.createdAt|date }}</td>
+        </tr>
+        {% if reservation.status is same as enum('\\App\\Enum\\ReservationStatus').Confirmed %}
+        <tr>
+            <th>Confirmé le</th>
+            <td>{{ reservation.createdAt|date }}</td>
+        </tr>
+        {% endif %}
+    </table>
+    <ul>
+        <li><a href="{{ path('app_admin_reservation') }}">Liste des reservations</a></li>
+        {% if not reservation.confirmed %}
+            <li><a href="{{ path('app_admin_reservation_update', { id: reservation.id }) }}">Modifier la reservation</a></li>
+            <li><a href="{{ path('app_admin_reservation_delete', { id: reservation.id }) }}">Annuler la reservation</a></li>
+        {% endif %}
+    </ul>
+</main>
+{% endblock %}

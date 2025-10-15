@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des réservations{% endblock %}
+
+{% block body %}
+<main class="wrapper">
+    <h1>Liste des réservations</h1>
+
+    <table>
+        <thead>
+            <th>Référence</th>
+            <th>Pseudo</th>
+            <th>Concert</th>
+            <th>Statut</th>
+            <th>Date de la réservation</th>
+            <th>Actions</th>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <th scope="row">{{ reservation.reference }}</th>
+                <td>{{ reservation.pseudo }}</td>
+                <td>
+                    <a href="{{ path('app_admin_concert_read', { id: reservation.concert.id }) }}">{{ reservation.concert.musicGroup }}</a>
+                </td>
+                <td>{{ reservation.status.name }}</td>
+                <td>{{ reservation.createdAt|date }}</td>
+                <td>
+                    <ul>
+                        <li><a href="{{ path('app_admin_reservation_read', { id: reservation.id }) }}">Afficher</a></li>
+                        {% if not reservation.confirmed %}
+                            <li><a href="{{ path('app_admin_reservation_update', { id: reservation.id }) }}">Modifier</a></li>
+                        {% endif %}
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ path('app_admin_reservation_create') }}">Ajouter une réservation</a>
+</main>
+{% endblock %}

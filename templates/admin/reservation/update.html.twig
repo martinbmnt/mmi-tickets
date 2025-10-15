@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la réservation{% endblock %}
+
+{% block body %}
+<main class="wrapper">
+    <h1>Modifier la réservation</h1>
+    {{ form_start(form) }}
+        {{ form_rest(form)}}
+        <button type="submit">Enregistrer les modifications</button>
+    {{ form_end(form) }}
+    <a href="{{ path('app_admin_reservation_read', { id: reservation.id }) }}">Annuler les modifications</a>
+</main>
+{% endblock %}
