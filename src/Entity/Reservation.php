@@ -27,6 +27,9 @@ class Reservation
     #[ORM\Column(length: 255)]
     private string $pseudo;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $confirmedAt = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -36,6 +39,11 @@ class Reservation
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getReference(): string
+    {
+        return '#' . $this->getCreatedAt()->format('Y') . '-' . sprintf("%04d", $this->getId());
     }
 
     public function getConcert(): Concert
@@ -48,6 +56,11 @@ class Reservation
         $this->concert = $concert;
     }
 
+    public function isConfirmed(): bool
+    {
+        return $this->status === ReservationStatus::Confirmed;
+    }
+
     public function getStatus(): ReservationStatus
     {
         return $this->status;
@@ -55,17 +68,16 @@ class Reservation
 
     public function setStatus(ReservationStatus $status): void
     {
+        if ($status === ReservationStatus::Confirmed) {
+            $this->confirmedAt = new \DateTimeImmutable();
+        }
+
         $this->status = $status;
     }
 
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): void
-    {
-        $this->createdAt = $createdAt;
     }
 
     public function getPseudo(): string
@@ -76,5 +88,10 @@ class Reservation
     public function setPseudo(string $pseudo): void
     {
         $this->pseudo = $pseudo;
+    }
+
+    public function getConfirmedAt(): ?\DateTimeImmutable
+    {
+        return $this->confirmedAt;
     }
 }
