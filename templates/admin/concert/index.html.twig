@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des concerts{% endblock %}
+
+{% block body %}
+<main class="wrapper">
+    <h1>Liste des concerts</h1>
+
+    <table>
+        <thead>
+            <th>Groupe</th>
+            <th>Date</th>
+            <th>Lieu</th>
+            <th>Nombre de places</th>
+            <th>Actions</th>
+        </thead>
+        <tbody>
+            {% for concert in concerts %}
+            <tr>
+                <th scope="row"><a href="{{ path('app_admin_concert_read', { id: concert.id }) }}">{{ concert.musicGroup }}</a></th>
+                <td>{{ concert.date|date('d/m/Y') }}</td>
+                <td>{{ concert.city ~ ', ' ~ concert.country }}</td>
+                <td>
+                    {{ concert.places ~ ' places' }}
+                    <br>
+                    <a href="{{ path('app_admin_reservation', { concert: concert.id }) }}">{{ concert.reservations|length ~ ' réservations' }}</a>
+                </td>
+                <td>
+                    <ul>
+                        <li><a href="{{ path('app_admin_concert_update', { id: concert.id }) }}">Modifier</a></li>
+                        <li><a href="{{ path('app_admin_concert_delete', { id: concert.id }) }}">Annuler</a></li>
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ path('app_admin_concert_create') }}">Ajouter un concert</a>
+</main>
+{% endblock %}

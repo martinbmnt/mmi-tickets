@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Concert {{ concert.musicGroup }}{% endblock %}
+
+{% block body %}
+<main class="wrapper">
+    <h1>Concert {{ concert.musicGroup }}</h1>
+    <table>
+        <tr>
+            <th>Groupe</th>
+            <td>{{ concert.musicGroup }}</td>
+        </tr>
+        <tr>
+            <th>Date</th>
+            <td>{{ concert.date|date('d/m/Y') }}</td>
+        </tr>
+        <tr>
+            <th>Lieu</th>
+            <td>{{ concert.city ~ ', ' ~ concert.country }}</td>
+        </tr>
+        <tr>
+            <th>Places</th>
+            <td>
+                <dl>
+                    <dt>Capacité</dt>
+                    <dd>{{ concert.places }}</dd>
+                    <dt>Réservations (confirmées)</dt>
+                    <dd>
+                        {{ concert.reservations|length }} ({{ concert.reservations|filter(resa => resa.status is same as enum('\\App\\Enum\\ReservationStatus').Confirmed)|length }})
+                        <a href="{{ path('app_admin_reservation', { concert: concert.id }) }}">Afficher les réservations</a>
+                    </dd>
+                </dl>
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li><a href="{{ path('app_admin_concert') }}">Liste des concerts</a></li>
+        <li><a href="{{ path('app_admin_concert_update', { id: concert.id }) }}">Modifier le concert</a></li>
+        <li><a href="{{ path('app_admin_concert_delete', { id: concert.id }) }}">Annuler le concert</a></li>
+    </ul>
+</main>
+{% endblock %}
