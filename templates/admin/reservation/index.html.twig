@@ -5,7 +5,15 @@
 {% block body %}
 <main class="wrapper">
     <h1>Liste des réservations</h1>
-
+    <form method="get">
+        <label for="concert">Concert</label>
+        <select name="concert" id="concert" onchange="this.form.submit()">
+            <option value="" {%- if not app.request.query.get('concert') %} selected{% endif %}>Tous les concerts</option>
+            {% for concert in concerts %}
+            <option value="{{ concert.id}}" {%- if app.request.query.get('concert') == concert.id %} selected{% endif %}>{{ concert.musicGroup }}</option>
+            {% endfor %}
+        </select>
+    </form>
     <table>
         <thead>
             <th>Référence</th>

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Concert;
 use App\Entity\Reservation;
 use App\Form\ReservationType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,11 +18,19 @@ final class ReservationController extends AbstractController
     }
 
     #[Route('/admin/reservation', name: 'app_admin_reservation', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $reservations = $this->entityManager->getRepository(Reservation::class)->findBy([], ['createdAt' => 'DESC']);
+        if ($request->query->has('concert') && $request->query->get('concert') !== '') {
+            $concert = $request->query->getInt('concert');
+            $reservations = $this->entityManager->getRepository(Reservation::class)->findBy(['concert' => $concert], ['createdAt' => 'DESC']);
+        } else {
+            $reservations = $this->entityManager->getRepository(Reservation::class)->findBy([], ['createdAt' => 'DESC']);
+        }
+
+        $concerts = $this->entityManager->getRepository(Concert::class)->findAll();
 
         return $this->render('admin/reservation/index.html.twig', [
+            'concerts' => $concerts,
             'reservations' => $reservations,
         ]);
     }
