@@ -75,4 +75,30 @@ final class ReservationController extends AbstractController
 
         return $response;
     }
+
+    #[Route('/reservations/{id}/qrcode', name: 'reservations_qrcode', methods: ['GET'])]
+    public function qrcode(int $id): Response
+    {
+        $response = new JsonResponse();
+        $response->headers->set('server', 'mmiTickets');
+
+        // Récupérer la réservation selon l'id
+
+        $reservation = $this->entityManager->getRepository(Reservation::class)->find($id);
+
+        if (!$reservation) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            $response->setData([
+                'error' => 'reservation not found',
+            ]);
+
+            return $response;
+        }
+
+        // Générer le QR Code
+
+        $response->setStatusCode(Response::HTTP_NOT_IMPLEMENTED);
+
+        return $response;
+    }
 }
