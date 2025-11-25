@@ -20,7 +20,7 @@ final class ReservationController extends AbstractController
     {
     }
 
-    #[Route('/reservations', name: 'reservations_create_correction', methods: ['POST'])]
+    #[Route('/reservations', name: 'reservations_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
         $response = new JsonResponse();
