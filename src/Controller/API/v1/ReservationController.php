@@ -23,6 +23,98 @@ final class ReservationController extends AbstractController
     {
     }
 
+    #[Route('/reservations', name: 'reservations_index', methods: ['GET'])]
+    public function index(Request $request): JsonResponse
+    {
+        $response = new JsonResponse();
+        $response->headers->set('server', 'mmiTickets');
+
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 10);
+
+        if ($page < 1 || $limit < 1) {
+            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+
+            $response->setData([
+                'error' => "invalid page or limit query",
+            ]);
+
+            return $response;
+        }
+
+        $reservationRepository = $this->entityManager->getRepository(Reservation::class);
+        $reservationsCount = $reservationRepository->count();
+
+        $links = [];
+
+        if ($reservationsCount > 0) {
+            $latestUrl = $this->generateUrl('api_v1_reservations_read', [], UrlGeneratorInterface::ABSOLUTE_URL);
+            $links[] = "<$latestUrl>; rel=\"first\"";
+
+            $latestUrl = $this->generateUrl('api_v1_reservations_read_latest', [], UrlGeneratorInterface::ABSOLUTE_URL);
+            $links[] = "<$latestUrl>; rel=\"last\"";
+        }
+
+        // Out of range page index.
+        if ($page > ceil($reservationsCount / $limit)) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+
+            if (!empty($links)) {
+                $response->headers->set('Links', $links);
+            }
+
+            return $response;
+        }
+
+        if ($limit > $reservationsCount) {
+            $limit = $reservationsCount;
+        }
+
+        $reservations = $this->entityManager->getRepository(Reservation::class)->findBy([], null, $limit, ($page - 1) * $limit);
+
+        $response->headers->set('Content-Range', 'urls ' . ($page * $limit - ($limit - 1)) . '-' . min($reservationsCount, $page * $limit) . '/' . $reservationsCount);
+        $response->headers->set('X-Total-Count', $reservationsCount);
+        $response->headers->set('X-Page-Size', count($reservations));
+        $response->headers->set('X-Current-Page', $page);
+
+        if ($page > 1) {
+            $previousUrl = $this->generateUrl('api_v1_reservations_index', ['page' => $page - 1], UrlGeneratorInterface::ABSOLUTE_URL);
+            $links[] = "<$previousUrl>; rel=\"prev\"";
+        }
+
+        if ($reservationsCount > (count($reservations) + ($page - 1) * $limit)) {
+            $nextUrl = $this->generateUrl('api_v1_reservations_index', ['page' => $page + 1], UrlGeneratorInterface::ABSOLUTE_URL);
+            $links[] = "<$nextUrl>; rel=\"next\"";
+        }
+
+        if (!empty($links)) {
+            $response->headers->set('Links', $links);
+        }
+
+        $response->setStatusCode(Response::HTTP_OK);
+
+        // Process response data.
+
+        $reservationsLocations = [];
+
+        foreach ($reservations as $reservation) {
+            $reservationsLocations[] = $this->generateUrl(
+                'api_v1_reservations_read',
+                ['id' => $reservation->getId()],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+        }
+
+        $response->setData([
+            'locations' => $reservationsLocations,
+            'meta' => [
+                'total_count' => count($reservationsLocations),
+            ],
+        ]);
+
+        return $response;
+    }
+
     #[Route('/reservations', name: 'reservations_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
