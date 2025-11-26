@@ -42,6 +42,11 @@ class Concert
         $this->reservations = new ArrayCollection();
     }
 
+    public function __toString(): string
+    {
+        return '/concerts/' . $this->id;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

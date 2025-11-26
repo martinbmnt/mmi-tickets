@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Enum\ReservationStatus;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 class Reservation
@@ -44,6 +46,12 @@ class Reservation
     public function getReference(): string
     {
         return '#' . $this->getCreatedAt()->format('Y') . '-' . sprintf("%04d", $this->getId());
+    }
+
+    #[SerializedName('concert')]
+    public function getConcertReference(): string
+    {
+        return (string) $this->concert;
     }
 
     public function getConcert(): Concert

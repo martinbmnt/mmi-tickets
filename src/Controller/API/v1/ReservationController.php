@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/v1', name: 'api_v1_')]
 final class ReservationController extends AbstractController
@@ -69,9 +72,78 @@ final class ReservationController extends AbstractController
 
         $response->setStatusCode(Response::HTTP_CREATED, 'Created');
 
-        // todo: générer l'url de la réservation.
-        $response->headers->set('Location', 'url de la nouvelle reservation');
+        $response->headers->set(
+            'Location',
+            $this->generateUrl(
+                'api_v1_reservations_read',
+                ['id' => $reservation->getId()],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            )
+        );
 
+        return $response;
+    }
+
+    #[Route('/reservations/{id}', name: 'reservations_read', methods: ['GET'])]
+    public function read(int $id, SerializerInterface $serializer): JsonResponse
+    {
+        $response = new JsonResponse();
+        $response->headers->set('server', 'mmiTickets');
+
+        // Récupérer la réservation selon l'id
+
+        /** @var Reservation|null $reservation */
+        $reservation = $this->entityManager->getRepository(Reservation::class)->find($id);
+
+        if (!$reservation) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            $response->setData([
+                'error' => 'reservation not found',
+            ]);
+
+            return $response;
+        }
+
+        // Formater la réservation en JSON
+
+        $reservationJson = $serializer->serialize($reservation, 'json', [
+            AbstractNormalizer::ATTRIBUTES => [
+                'pseudo',
+                'status',
+                'concertReference', // Appelle la méthode Reservation::getConcertReference
+            ]
+        ]);
+
+        $response->setContent($reservationJson);
+
+        // Ajouter les entêtes spécifiques : QR Code, Concert, Collection
+
+        $reservationQrCodeUrl = $this->generateUrl(
+            'api_v1_reservations_qrcode',
+            ['id' => $reservation->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        ); // exemple d'url générée : http://127.0.0.1:8000/api/v1/reservations/21/qrcode
+
+        $concertTitle = "Concert - {$reservation->getConcert()->getMusicGroup()}";
+        $concertReadUrl = $this->generateUrl(
+            'api_v1_concerts_read',
+            ['id' => $reservation->getConcert()->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        ); // exemple d'url générée : http://127.0.0.1:8000/api/v1/concerts/5
+
+        $reservationsIndexUrl = $this->generateUrl(
+            'api_v1_reservations_index',
+            [],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        $links = [
+            "<{$reservationQrCodeUrl}>; title=\"QR code\"; type=\"image/png\"", // QR Code
+            "<{$concertReadUrl}>; rel=\"related\"; title=\"$concertTitle\"", // Concert read
+            "<{$reservationsIndexUrl}>; rel=\"collection\";", // Reservations index
+        ];
+
+        $response->headers->set('Link', $links);
 
         return $response;
     }
