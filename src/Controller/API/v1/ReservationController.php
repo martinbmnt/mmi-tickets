@@ -358,6 +358,26 @@ final class ReservationController extends AbstractController
 
         return $response;
     }
+
+    #[Route('/reservations/{id}', name: 'reservations_patch', methods: ['PATCH'])]
+    public function patch(int $id): JsonResponse
+    {
+        $response = new JsonResponse();
+        $response->headers->set('server', 'mmiTickets');
+
+        $reservation = $this->entityManager->getRepository(Reservation::class)->find($id);
+
+        if (!$reservation) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+
+            return $response;
+        }
+
+        $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
+        $response->headers->set('Allow', ['GET', 'PUT', 'DELETE']);
+
+        return $response;
+    }
     #[Route('/reservations/{id}/qrcode', name: 'reservations_qrcode', methods: ['GET'])]
     public function qrcode(int $id): Response
     {
