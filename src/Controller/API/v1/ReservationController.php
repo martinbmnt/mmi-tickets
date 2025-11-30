@@ -296,6 +296,68 @@ final class ReservationController extends AbstractController
 
         return $response;
     }
+
+    #[Route('/reservations/{id}', name: 'reservations_update', methods: ['PUT'])]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $response = new JsonResponse();
+        $response->headers->set('server', 'mmiTickets');
+
+        // Récupérer la réservation selon l'id
+
+        /** @var Reservation|null $reservation */
+        $reservation = $this->entityManager->getRepository(Reservation::class)->find($id);
+
+        if (!$reservation) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            $response->setData([
+                'error' => 'reservation not found',
+            ]);
+
+            return $response;
+        }
+
+        // Vérification des données soumises
+
+        if (!$request->request->count()) {
+            $response->setStatusCode(Response::HTTP_BAD_REQUEST, "missing update fields");
+
+            $response->setData([
+                'error' => "pseudo or status must not be empty",
+            ]);
+
+            return $response;
+        }
+
+        // Mettre à jour la réservation à partir des données soumises
+
+        $pseudo = $request->request->get('pseudo');
+        $status = $request->request->get('status');
+
+        if ($status) {
+            try {
+                $reservation->setStatus(ReservationStatus::from($status));
+            } catch (\ValueError|\TypeError $e) {
+                $response->setStatusCode(Response::HTTP_BAD_REQUEST, "invalid status value");
+
+                $response->setData([
+                    'error' => "invalid value for status, valid values are 'confirmed' and 'pending'",
+                ]);
+
+                return $response;
+            }
+        }
+
+        if ($pseudo) {
+            $reservation->setPseudo($pseudo);
+        }
+
+        $this->entityManager->flush();
+
+        $response->setStatusCode(Response::HTTP_OK, 'Content updated');
+
+        return $response;
+    }
     #[Route('/reservations/{id}/qrcode', name: 'reservations_qrcode', methods: ['GET'])]
     public function qrcode(int $id): Response
     {
