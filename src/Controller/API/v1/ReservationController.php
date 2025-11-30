@@ -48,8 +48,8 @@ final class ReservationController extends AbstractController
         $links = [];
 
         if ($reservationsCount > 0) {
-            $latestUrl = $this->generateUrl('api_v1_reservations_read', [], UrlGeneratorInterface::ABSOLUTE_URL);
-            $links[] = "<$latestUrl>; rel=\"first\"";
+            $firstUrl = $this->generateUrl('api_v1_reservations_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
+            $links[] = "<$firstUrl>; rel=\"first\"";
 
             $latestUrl = $this->generateUrl('api_v1_reservations_read_latest', [], UrlGeneratorInterface::ABSOLUTE_URL);
             $links[] = "<$latestUrl>; rel=\"last\"";
