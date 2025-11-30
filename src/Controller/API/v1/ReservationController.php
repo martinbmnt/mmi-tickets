@@ -4,6 +4,7 @@ namespace App\Controller\API\v1;
 
 use App\Entity\Concert;
 use App\Entity\Reservation;
+use App\Enum\ReservationStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -378,6 +379,46 @@ final class ReservationController extends AbstractController
 
         return $response;
     }
+
+    #[Route('/reservations/{id}', name: 'reservations_delete', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        $response = new JsonResponse();
+        $response->headers->set('server', 'mmiTickets');
+
+        // Récupérer la réservation selon l'id
+
+        /** @var Reservation|null $reservation */
+        $reservation = $this->entityManager->getRepository(Reservation::class)->find($id);
+
+        if (!$reservation) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            $response->setData([
+                'error' => 'reservation not found',
+            ]);
+
+            return $response;
+        }
+
+        // Supprimer la réservation
+
+        if ($reservation->isConfirmed()) {
+            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+            $response->setData([
+                'error' => 'confirmed reservation cannot be deleted',
+            ]);
+
+            return $response;
+        }
+
+        $this->entityManager->remove($reservation);
+        $this->entityManager->flush();
+
+        $response->setStatusCode(Response::HTTP_NO_CONTENT);
+
+        return $response;
+    }
+
     #[Route('/reservations/{id}/qrcode', name: 'reservations_qrcode', methods: ['GET'])]
     public function qrcode(int $id): Response
     {
