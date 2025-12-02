@@ -107,9 +107,9 @@ final class ConcertController extends AbstractController
 
     private function getContent(Request $request): InputBag
     {
-        return match ($request->headers->get('content-type')) {
-            'application/json' => $request->getPayload(),
-            'application/x-www-form-urlencoded' => $request->request,
+        return match ($request->getContentTypeFormat()) {
+            'json' => $request->getPayload(),
+            'x-www-form-urlencoded' => $request->request,
             default => throw new BadRequestException()
         };
     }

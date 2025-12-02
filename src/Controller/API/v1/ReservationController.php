@@ -122,8 +122,10 @@ final class ReservationController extends AbstractController
         $response = new JsonResponse();
         $response->headers->set('server', 'mmiTickets');
 
-        $pseudo = $request->request->get('pseudo');
-        $concertRef = $request->request->get('concert');
+        $content = $this->getContent($request);
+
+        $pseudo = $content->get('pseudo');
+        $concertRef = $content->get('concert');
 
         if (!isset($pseudo) || !isset($concertRef)) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST, "pseudo and concert must not be empty");
@@ -242,58 +244,16 @@ final class ReservationController extends AbstractController
     }
 
     #[Route('/reservations/latest', name: 'reservations_read_latest', methods: ['GET'], priority: 1)]
-    public function latest(SerializerInterface $serializer): JsonResponse
+    public function latest(): JsonResponse
     {
         $response = new JsonResponse();
         $response->headers->set('server', 'mmiTickets');
 
         $reservation = $this->entityManager->getRepository(Reservation::class)->findOneBy([], ['id' => 'desc']);
 
-        if (!$reservation) {
-            $response->setStatusCode(Response::HTTP_NOT_FOUND);
-
-            return $response;
-        }
-
-        $reservationJson = $serializer->serialize($reservation, 'json', [
-            AbstractNormalizer::ATTRIBUTES => [
-                'pseudo',
-                'status',
-                'concertReference',
-            ]
+        $response = $this->forward('\App\Controller\API\v1\ReservationController::read', [
+            'id' => $reservation->getId(),
         ]);
-
-        $response->setStatusCode(Response::HTTP_OK);
-        $response->setContent($reservationJson);
-
-        // Ajouter les entêtes spécifiques : QR Code, Concert, Collection
-
-        $reservationQrCodeUrl = $this->generateUrl(
-            'api_v1_reservations_qrcode',
-            ['id' => $reservation->getId()],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        ); // exemple d'url générée : http://127.0.0.1:8000/api/v1/reservations/21/qrcode
-
-        $concertTitle = "Concert - {$reservation->getConcert()->getMusicGroup()}";
-        $concertReadUrl = $this->generateUrl(
-            'api_v1_concerts_read',
-            ['id' => $reservation->getConcert()->getId()],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        ); // exemple d'url générée : http://127.0.0.1:8000/api/v1/concerts/5
-
-        $reservationsIndexUrl = $this->generateUrl(
-            'api_v1_reservations_index',
-            [],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
-
-        $links = [
-            "<{$reservationQrCodeUrl}>; title=\"QR code\"; type=\"image/png\"", // QR Code
-            "<{$concertReadUrl}>; rel=\"related\"; title=\"$concertTitle\"", // Concert read
-            "<{$reservationsIndexUrl}>; rel=\"collection\";", // Reservations index
-        ];
-
-        $response->headers->set('Link', $links);
 
         return $response;
     }
@@ -320,7 +280,9 @@ final class ReservationController extends AbstractController
 
         // Vérification des données soumises
 
-        if (!$request->request->count()) {
+        $content = $this->getContent($request);
+
+        if (!$content->count()) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST, "missing update fields");
 
             $response->setData([
@@ -332,8 +294,8 @@ final class ReservationController extends AbstractController
 
         // Mettre à jour la réservation à partir des données soumises
 
-        $pseudo = $request->request->get('pseudo');
-        $status = $request->request->get('status');
+        $pseudo = $content->get('pseudo');
+        $status = $content->get('status');
 
         if ($status) {
             try {
@@ -443,5 +405,21 @@ final class ReservationController extends AbstractController
         $response->setStatusCode(Response::HTTP_NOT_IMPLEMENTED);
 
         return $response;
+    }
+
+    /**
+     * Retrieve content from request based on request's content-type header.
+     *
+     * @param Request $request Request represents an HTTP request.
+     *
+     * @return InputBag A container with the request content.
+     */
+    private function getContent(Request $request): InputBag
+    {
+        return match ($request->getContentTypeFormat()) {
+            'json' => $request->getPayload(),
+            'x-www-form-urlencoded' => $request->request,
+            default => throw new BadRequestException()
+        };
     }
 }
