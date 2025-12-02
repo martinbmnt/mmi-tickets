@@ -5,7 +5,9 @@ namespace App\Controller\API\v1;
 use App\Entity\Concert;
 use App\Entity\Reservation;
 use App\Enum\ReservationStatus;
+use App\Service\QRCodeGenerator;
 use Doctrine\ORM\EntityManagerInterface;
+use Endroid\QrCodeBundle\Response\QrCodeResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\InputBag;
@@ -337,7 +339,7 @@ final class ReservationController extends AbstractController
         }
 
         $response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
-        $response->headers->set('Allow', ['GET', 'PUT', 'DELETE']);
+        $response->headers->set('Allow', [Request::METHOD_GET, Request::METHOD_PUT, Request::METHOD_DELETE]);
 
         return $response;
     }
@@ -382,7 +384,7 @@ final class ReservationController extends AbstractController
     }
 
     #[Route('/reservations/{id}/qrcode', name: 'reservations_qrcode', methods: ['GET'])]
-    public function qrcode(int $id): Response
+    public function qrcode(int $id, QRCodeGenerator $qrCodeGenerator): Response
     {
         $response = new JsonResponse();
         $response->headers->set('server', 'mmiTickets');
@@ -402,7 +404,10 @@ final class ReservationController extends AbstractController
 
         // Générer le QR Code
 
-        $response->setStatusCode(Response::HTTP_NOT_IMPLEMENTED);
+        $result = $qrCodeGenerator->generate($reservation);
+
+        $response = new QrCodeResponse($result);
+        $response->headers->set('server', 'mmiTickets');
 
         return $response;
     }

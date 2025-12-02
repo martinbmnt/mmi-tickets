@@ -9,6 +9,13 @@ framework:
     #esi: true
     #fragments: true
 
+    http_client:
+        scoped_clients:
+            spotify.client:
+                base_uri: 'https://api.spotify.com'
+                auth_bearer: '%env(SPOTIFY_API_TOKEN)%'
+
+
 when@test:
     framework:
         test: true
